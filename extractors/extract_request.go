@@ -29,7 +29,7 @@ func RequestToType(request *http.Request, data interface{}, parseQuery, parsePar
 		extractorFunc = extractFromPathVariables
 	}
 
-	value := reflect.ValueOf(data)
+	value := reflect.Indirect(reflect.ValueOf(data))
 
 	if err := prepareInlineStructFields(request, value, extractorFunc); err != nil {
 		return nil, err
@@ -49,11 +49,11 @@ func extractFromPathVariables(paramName string, request *http.Request) string {
 
 func prepareInlineStructFields(request *http.Request, value reflect.Value, preparator extractor) error {
 	for i := 0; i < value.NumField(); i++ {
-		val := value.Field(i).Addr()
+		val := reflect.Indirect(value.Field(i).Addr())
 		if val.Kind() == reflect.Struct {
 			prepareInlineStructFields(request, val, preparator)
 		} else {
-			parsedTag := val.Type().Field(i).Tag.Get(tagParsing)
+			parsedTag := value.Type().Field(i).Tag.Get(tagParsing)
 			if parsedTag != "" {
 				dataQuery := request.URL.Query().Get(parsedTag)
 				if dataQuery != "" {
