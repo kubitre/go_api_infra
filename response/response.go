@@ -7,7 +7,6 @@ import (
 
 type ApiResponse struct {
 	ResponseWriter http.ResponseWriter
-	Headers        map[string]string
 	Target         string // service name
 }
 
@@ -16,19 +15,19 @@ type EntityCreated struct {
 }
 
 func NewResponseJSON(w http.ResponseWriter, target string) *ApiResponse {
+	w.Header().Add("Content-Type", "application/json")
 	return &ApiResponse{
 		ResponseWriter: w,
-		Headers: map[string]string{
-			"Content-Type": "application/json",
-		},
-		Target: target,
+		Target:         target,
 	}
 }
 
 func NewResponse(w http.ResponseWriter, target string, headers map[string]string) *ApiResponse {
+	for key, value := range headers {
+		w.Header().Add(key, value)
+	}
 	return &ApiResponse{
 		ResponseWriter: w,
-		Headers:        map[string]string{},
 		Target:         target,
 	}
 }
