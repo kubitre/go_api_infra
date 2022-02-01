@@ -1,4 +1,4 @@
-package request
+package extractors
 
 import (
 	"encoding/json"
