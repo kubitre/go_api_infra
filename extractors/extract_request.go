@@ -8,11 +8,10 @@ import (
 )
 
 const (
-	tagParsing = "query"
+	paramExtracting = "ex_param"
 )
 
-// TODO: make abstract type interface{}
-type extractor func(string, *http.Request) string
+type extractor func(string, *http.Request) interface{}
 
 func RequestToType(request *http.Request, data interface{}, parseQuery, parseParams bool) (interface{}, error) {
 	if err := json.NewDecoder(request.Body).Decode(&data); err != nil {
@@ -38,13 +37,17 @@ func RequestToType(request *http.Request, data interface{}, parseQuery, parsePar
 	return data, nil
 }
 
-func extractFromQuery(paramName string, request *http.Request) string {
+func extractFromQuery(paramName string, request *http.Request) interface{} {
 	return request.URL.Query().Get(paramName)
 }
 
-func extractFromPathVariables(paramName string, request *http.Request) string {
+func extractFromPathVariables(paramName string, request *http.Request) interface{} {
 	vars := request.Context().Value(0).(map[string]interface{})
 	return vars[paramName].(string)
+}
+
+func extractFromHeaders(paramName string, request *http.Request) interface{} {
+	return request.Header.Get(paramName)
 }
 
 func prepareInlineStructFields(request *http.Request, value reflect.Value, preparator extractor) error {
@@ -53,11 +56,11 @@ func prepareInlineStructFields(request *http.Request, value reflect.Value, prepa
 		if val.Kind() == reflect.Struct {
 			prepareInlineStructFields(request, val, preparator)
 		} else {
-			parsedTag := value.Type().Field(i).Tag.Get(tagParsing)
+			parsedTag := value.Type().Field(i).Tag.Get(paramExtracting)
 			if parsedTag != "" {
-				dataQuery := request.URL.Query().Get(parsedTag)
+				dataQuery := preparator(parsedTag, request)
 				if dataQuery != "" {
-					value.SetString(dataQuery)
+					value.Set(reflect.ValueOf(dataQuery)) // TODO: need format to concrete type
 				} else {
 					return errors.New("in request does not exist query param with name: " + parsedTag)
 				}

@@ -9,6 +9,17 @@ type ApiError struct {
 	Errors  []ApiError  `json:"errors,omitempty"`
 }
 
+func (e ApiError) Error() string {
+	result := "Err: " + string(e.Code) + " " + e.Message
+	if e.Target != "" {
+		result += "Service: " + e.Target
+	}
+	if e.TraceId != "" {
+		result += "TraceID: " + e.TraceId
+	}
+	return result
+}
+
 func MakeApiError(code string, message string, target string) ApiError {
 	return ApiError{
 		Code:    code,
