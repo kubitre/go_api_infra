@@ -70,7 +70,7 @@ func prepareInlineStructFields(request *http.Request, value reflect.Value, prepa
 				if parsedValue.Kind() == reflect.ValueOf(nil).Kind() {
 					return errors.New("in request does not exist query param with name: " + parsedTag)
 				}
-				value.Set(parsedValue)
+				val.Set(parsedValue)
 			}
 		}
 	}
