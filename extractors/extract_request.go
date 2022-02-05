@@ -7,30 +7,38 @@ import (
 	"reflect"
 )
 
+type ParserType string
+
 const (
-	paramExtracting = "ex_param"
+	ParseFromHeaders   ParserType = "parse_headers"
+	ParseFromQuery     ParserType = "parse_query"
+	ParsePathVariables ParserType = "parse_path_variables"
+	paramExtracting    string     = "ex_param"
 )
 
 type extractor func(string, *http.Request) interface{}
 
-func RequestToType(request *http.Request, data interface{}, parseQuery, parseParams bool) (interface{}, error) {
+func RequestToType(request *http.Request, data interface{}, tartgetParamsPlaces ...ParserType) (interface{}, error) {
 	if err := json.NewDecoder(request.Body).Decode(&data); err != nil {
 		return nil, errors.New("can not unmarshalled request")
 	}
 
-	var extractorFunc extractor
+	var extractorFuncs []extractor
 
-	if parseQuery {
-		extractorFunc = extractFromQuery
-	}
-
-	if parseParams {
-		extractorFunc = extractFromPathVariables
+	for _, extractorParam := range tartgetParamsPlaces {
+		switch extractorParam {
+		case ParseFromHeaders:
+			extractorFuncs = append(extractorFuncs, extractFromHeaders)
+		case ParseFromQuery:
+			extractorFuncs = append(extractorFuncs, extractFromQuery)
+		case ParsePathVariables:
+			extractorFuncs = append(extractorFuncs, extractFromPathVariables)
+		}
 	}
 
 	value := reflect.Indirect(reflect.ValueOf(data))
 
-	if err := prepareInlineStructFields(request, value, extractorFunc); err != nil {
+	if err := prepareInlineStructFields(request, value, extractorFuncs); err != nil {
 		return nil, err
 	}
 
@@ -50,22 +58,30 @@ func extractFromHeaders(paramName string, request *http.Request) interface{} {
 	return request.Header.Get(paramName)
 }
 
-func prepareInlineStructFields(request *http.Request, value reflect.Value, preparator extractor) error {
+func prepareInlineStructFields(request *http.Request, value reflect.Value, preparators []extractor) error {
 	for i := 0; i < value.NumField(); i++ {
 		val := reflect.Indirect(value.Field(i).Addr())
 		if val.Kind() == reflect.Struct {
-			prepareInlineStructFields(request, val, preparator)
+			prepareInlineStructFields(request, val, preparators)
 		} else {
 			parsedTag := value.Type().Field(i).Tag.Get(paramExtracting)
 			if parsedTag != "" {
-				dataQuery := preparator(parsedTag, request)
-				if dataQuery != "" {
-					value.Set(reflect.ValueOf(dataQuery)) // TODO: need format to concrete type
-				} else {
+				parsedValue := getValueInAllExtractors(parsedTag, request, preparators)
+				if parsedValue.Kind() == reflect.ValueOf(nil).Kind() {
 					return errors.New("in request does not exist query param with name: " + parsedTag)
 				}
+				value.Set(parsedValue)
 			}
 		}
 	}
 	return nil
+}
+
+func getValueInAllExtractors(parsedTag string, request *http.Request, extractors []extractor) reflect.Value {
+	for _, extractFunc := range extractors {
+		if res := extractFunc(parsedTag, request); res != nil {
+			return reflect.ValueOf(res)
+		}
+	}
+	return reflect.ValueOf(nil)
 }
