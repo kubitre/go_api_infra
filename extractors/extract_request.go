@@ -22,7 +22,9 @@ type extractor func(string, *http.Request) interface{}
 
 func RequestToType(request *http.Request, data interface{}, tartgetParamsPlaces ...ParserType) (interface{}, error) {
 	if err := json.NewDecoder(request.Body).Decode(&data); err != nil {
-		return nil, errors.New("can not unmarshalled request")
+		if len(tartgetParamsPlaces) == 0 {
+			return nil, errors.New("can not unmarshalled request")
+		}
 	}
 
 	var extractorFuncs []extractor
@@ -62,7 +64,8 @@ func extractFromHeaders(paramName string, request *http.Request) interface{} {
 
 func prepareInlineStructFields(request *http.Request, value reflect.Value, preparators []extractor) error {
 	for i := 0; i < value.NumField(); i++ {
-		val := reflect.Indirect(value.Field(i).Addr())
+		val := reflect.Indirect(value.Field(i))
+		valAddress := value.Field(i).Addr()
 		if val.Kind() == reflect.Struct {
 			prepareInlineStructFields(request, val, preparators)
 		} else {
@@ -72,34 +75,37 @@ func prepareInlineStructFields(request *http.Request, value reflect.Value, prepa
 				if parsedValue.Kind() == reflect.ValueOf(nil).Kind() {
 					return errors.New("in request does not exist query param with name: " + parsedTag)
 				}
-				setValueToType(val, parsedValue.String())
+				if err := setValueToType(val, valAddress, parsedValue.String()); err != nil {
+					return err
+				}
 			}
 		}
 	}
 	return nil
 }
 
-func setValueToType(val reflect.Value, parsedValue string) error {
-	if val.CanSet() {
+func setValueToType(val reflect.Value, valToSet reflect.Value, parsedValue string) error {
+	indirect := reflect.Indirect(valToSet)
+	if valToSet.CanSet() {
 		return errors.New("can not setting value to this field: " + val.Addr().String())
 	}
 	switch val.Kind() {
 	case reflect.Int:
-		val.Set(reflect.ValueOf(cast.ToInt(parsedValue)))
+		indirect.Set(reflect.ValueOf(cast.ToInt(parsedValue)))
 	case reflect.Int16:
-		val.Set(reflect.ValueOf(cast.ToInt16(parsedValue)))
+		indirect.Set(reflect.ValueOf(cast.ToInt16(parsedValue)))
 	case reflect.Int32:
-		val.Set(reflect.ValueOf(cast.ToInt32(parsedValue)))
+		indirect.Set(reflect.ValueOf(cast.ToInt32(parsedValue)))
 	case reflect.Int64:
-		val.Set(reflect.ValueOf(cast.ToInt64(parsedValue)))
+		indirect.Set(reflect.ValueOf(cast.ToInt64(parsedValue)))
 	case reflect.Float32:
-		val.Set(reflect.ValueOf(cast.ToFloat32(parsedValue)))
+		indirect.Set(reflect.ValueOf(cast.ToFloat32(parsedValue)))
 	case reflect.Float64:
-		val.Set(reflect.ValueOf(cast.ToFloat64(parsedValue)))
+		indirect.Set(reflect.ValueOf(cast.ToFloat64(parsedValue)))
 	case reflect.String:
-		val.Set(reflect.ValueOf(parsedValue))
+		indirect.Set(reflect.ValueOf(parsedValue))
 	case reflect.Bool:
-		val.Set(reflect.ValueOf(cast.ToBool(parsedValue)))
+		indirect.Set(reflect.ValueOf(cast.ToBool(parsedValue)))
 	default:
 		return errors.New("error while setting up")
 	}
