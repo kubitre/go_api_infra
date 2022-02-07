@@ -54,7 +54,9 @@ func (responser *ApiResponse) writeResponse(status int, body interface{}) {
 	}
 
 	responser.ResponseWriter.WriteHeader(status)
-	responser.ResponseWriter.Write(respBody)
+	if body != nil {
+		responser.ResponseWriter.Write(respBody)
+	}
 }
 
 func (responser *ApiResponse) Ok(entity interface{}) {

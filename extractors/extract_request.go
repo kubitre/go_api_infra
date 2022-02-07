@@ -5,6 +5,8 @@ import (
 	"errors"
 	"net/http"
 	"reflect"
+
+	"github.com/spf13/cast"
 )
 
 type ParserType string
@@ -70,9 +72,36 @@ func prepareInlineStructFields(request *http.Request, value reflect.Value, prepa
 				if parsedValue.Kind() == reflect.ValueOf(nil).Kind() {
 					return errors.New("in request does not exist query param with name: " + parsedTag)
 				}
-				val.Set(parsedValue)
+				setValueToType(val, parsedValue.String())
 			}
 		}
+	}
+	return nil
+}
+
+func setValueToType(val reflect.Value, parsedValue string) error {
+	if val.CanSet() {
+		return errors.New("can not setting value to this field: " + val.Addr().String())
+	}
+	switch val.Kind() {
+	case reflect.Int:
+		val.Set(reflect.ValueOf(cast.ToInt(parsedValue)))
+	case reflect.Int16:
+		val.Set(reflect.ValueOf(cast.ToInt16(parsedValue)))
+	case reflect.Int32:
+		val.Set(reflect.ValueOf(cast.ToInt32(parsedValue)))
+	case reflect.Int64:
+		val.Set(reflect.ValueOf(cast.ToInt64(parsedValue)))
+	case reflect.Float32:
+		val.Set(reflect.ValueOf(cast.ToFloat32(parsedValue)))
+	case reflect.Float64:
+		val.Set(reflect.ValueOf(cast.ToFloat64(parsedValue)))
+	case reflect.String:
+		val.Set(reflect.ValueOf(parsedValue))
+	case reflect.Bool:
+		val.Set(reflect.ValueOf(cast.ToBool(parsedValue)))
+	default:
+		return errors.New("error while setting up")
 	}
 	return nil
 }
