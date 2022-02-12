@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"reflect"
 
+	"github.com/gorilla/mux"
 	"github.com/kubitre/go_api_infra/response"
 	"github.com/spf13/cast"
 )
@@ -66,8 +67,8 @@ func extractFromQuery(paramName string, request *http.Request) interface{} {
 }
 
 func extractFromPathVariables(paramName string, request *http.Request) interface{} {
-	vars := request.Context().Value(0).(map[string]interface{})
-	return vars[paramName].(string)
+	vars := mux.Vars(request)
+	return vars[paramName]
 }
 
 func extractFromHeaders(paramName string, request *http.Request) interface{} {
