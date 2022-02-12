@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"reflect"
 
+	"github.com/kubitre/go_api_infra/response"
 	"github.com/spf13/cast"
 )
 
@@ -20,10 +21,18 @@ const (
 
 type extractor func(string, *http.Request) interface{}
 
-func RequestToType(request *http.Request, data interface{}, tartgetParamsPlaces ...ParserType) (interface{}, error) {
+/**
+RequestToType - extract from http.Request payload data from:
+1. Body (prefer)
+2. PathVariables(optional)
+3. QueryParams(optional)
+4. Headers(optional)
+*/
+func RequestToType(request *http.Request, writer http.ResponseWriter, target string, data interface{}, tartgetParamsPlaces ...ParserType) (interface{}, error) {
 	if err := json.NewDecoder(request.Body).Decode(&data); err != nil {
 		if len(tartgetParamsPlaces) == 0 {
-			return nil, errors.New("can not unmarshalled request")
+			response.NewResponseJSON(writer, target).BadRequest(response.ApiError{Code: "WEB_INPUT_ERROR", Message: "can not deserialize input request", Target: target, Context: "Read spec at: /swagger"})
+			return nil, err
 		}
 	}
 
@@ -43,6 +52,9 @@ func RequestToType(request *http.Request, data interface{}, tartgetParamsPlaces 
 	value := reflect.Indirect(reflect.ValueOf(data))
 
 	if err := prepareInlineStructFields(request, value, extractorFuncs); err != nil {
+		response.NewResponseJSON(writer, target).BadRequest(
+			response.ApiError{Code: "WEB_INPUT_ERROR", Message: "can not deserialize input request", Target: target, Context: "Read spec at: /swagger"},
+		)
 		return nil, err
 	}
 

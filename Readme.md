@@ -9,7 +9,7 @@ Infrastructre methods and types for make api simple
 
 ## Request
 
-- extract body to data class from all sources request with special tag
+- extract body to data class from all sources request with special tag and automatic response build (not best practic copy and paste deserialize code)
 
 ## Metrics Prometheus
 

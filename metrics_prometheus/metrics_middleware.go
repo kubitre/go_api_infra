@@ -1,14 +1,12 @@
-package middlewares
+package metricsprometheus
 
 import (
 	"net/http"
 	"strconv"
 	"time"
-
-	metricsprometheus "github.com/kubitre/go_api_infra/metrics_prometheus"
 )
 
-func AddGoldenMetrics(recorder metricsprometheus.MetricRecorder, method string, handler http.HandlerFunc) http.Handler {
+func AddGoldenMetrics(recorder MetricRecorder, method string, handler http.HandlerFunc) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		wi := &responseWriterInterceptor{
 			statusCode:     http.StatusOK,
@@ -17,12 +15,12 @@ func AddGoldenMetrics(recorder metricsprometheus.MetricRecorder, method string, 
 
 		timeStart := time.Now()
 		defer func() {
-			recorder.ObserveHTTPRequestDuration(request.Context(), metricsprometheus.HTTPReqProperties{
+			recorder.ObserveHTTPRequestDuration(request.Context(), HTTPReqProperties{
 				Method: method,
 				Code:   strconv.Itoa(wi.statusCode),
 			}, time.Since(timeStart))
 
-			recorder.ObserveHTTPResponseSize(request.Context(), metricsprometheus.HTTPReqProperties{
+			recorder.ObserveHTTPResponseSize(request.Context(), HTTPReqProperties{
 				Method: method,
 				Code:   strconv.Itoa(wi.statusCode),
 			}, wi.sizeResponse)
