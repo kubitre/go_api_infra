@@ -10,6 +10,7 @@ type ApiResponse struct {
 	Target         string // service name
 }
 
+// swagger:model EntityCreated
 type EntityCreated struct {
 	ID string `json:"id"`
 }

@@ -1,12 +1,20 @@
 package response
 
+// swagger:model ApiError
 type ApiError struct {
-	Code    string      `json:"code"`
-	Message string      `json:"message,omitempty"`
-	Target  string      `json:"target,omitempty"`
+	// Code operation
+	// in: string
+	Code string `json:"code"`
+	// Error description
+	Message string `json:"message,omitempty"`
+	// API Target
+	Target string `json:"target,omitempty"`
+	// Anything data
 	Context interface{} `json:"context,omitempty"`
-	TraceId string      `json:"traceId,omitempty"`
-	Errors  []ApiError  `json:"errors,omitempty"`
+	// TraceID
+	TraceId string `json:"traceId,omitempty"`
+	// Additional Errors
+	Errors []ApiError `json:"errors,omitempty"`
 }
 
 func (e ApiError) Error() string {
