@@ -4,7 +4,7 @@ Infrastructre methods and types for make api simple
 
 ## Response
 
-- abstract type ApiResponse which can used as Tipically responses code as functions
+- abstract type ApiResponse which can used as Tipically responses code as functions (also ready to go-swagger compilation)
 - Json Style for ApiError and method for simple constructing this model
 
 ## Request
