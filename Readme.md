@@ -2,6 +2,13 @@
 
 Infrastructre methods and types for make api simple
 
+
+## Installation
+
+```bash
+go get github.com/kubitre/go_api_infra
+```
+
 ## Response
 
 - abstract type ApiResponse which can used as Tipically responses code as functions (also ready to go-swagger compilation)
