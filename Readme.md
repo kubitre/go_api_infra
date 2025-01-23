@@ -6,7 +6,7 @@ Infrastructre methods and types for make api simple
 ## Installation
 
 ```bash
-go get github.com/kubitre/go_api_infra
+go get github.com/kubitre/goinfra
 ```
 
 ## Response

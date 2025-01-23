@@ -1,4 +1,4 @@
-module github.com/kubitre/go_api_infra
+module github.com/kubitre/goinfra
 
 go 1.22
 

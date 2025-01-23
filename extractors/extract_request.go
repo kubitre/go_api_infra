@@ -7,7 +7,7 @@ import (
 	"reflect"
 
 	"github.com/gorilla/mux"
-	"github.com/kubitre/go_api_infra/response"
+	"github.com/kubitre/goinfra/response"
 	"github.com/spf13/cast"
 )
 
@@ -22,7 +22,8 @@ const (
 
 type extractor func(string, *http.Request) interface{}
 
-/**
+/*
+*
 RequestToType - extract from http.Request payload data from:
 1. Body (prefer)
 2. PathVariables(optional)
