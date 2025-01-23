@@ -14,3 +14,7 @@ Infrastructre methods and types for make api simple
 ## Metrics Prometheus
 
 - base golden metrics for api with high level methods for sending metrics to prometheus
+
+## Pgqueue wrapper
+
+- publisher/subscriber based on postgresql tables
