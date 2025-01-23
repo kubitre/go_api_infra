@@ -37,9 +37,13 @@ func (p *Publisher[T]) Publish(ctx context.Context, queueName string, payload T)
 		return nil, fmt.Errorf("ошибка при сериализации payload: %w", err)
 	}
 
+	metadata := pgq.Metadata{
+		"version": "1.0",
+	}
+
 	msg := &pgq.MessageOutgoing{
 		Payload:  payloadBytes,
-		Metadata: pgq.Metadata{},
+		Metadata: metadata,
 	}
 
 	return p.publisher.Publish(ctx, queueName, msg)
