@@ -38,7 +38,8 @@ func (p *Publisher[T]) Publish(ctx context.Context, queueName string, payload T)
 	}
 
 	msg := &pgq.MessageOutgoing{
-		Payload: payloadBytes,
+		Payload:  payloadBytes,
+		Metadata: pgq.Metadata{},
 	}
 
 	return p.publisher.Publish(ctx, queueName, msg)
