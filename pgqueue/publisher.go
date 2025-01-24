@@ -27,7 +27,7 @@ func NewPublisher[T any](db *sql.DB) *Publisher[T] {
 // Publish publishes a message to the queue.
 // Accepts a context (context.Context), a queue name (queueName), and a payload of any type (T).
 // Returns an error if something goes wrong.
-func (p *Publisher[T]) Publish(ctx context.Context, queueName string, payload T) ([]uuid.UUID, error) {
+func (p *Publisher[T]) Publish(ctx context.Context, queueName string, customMetaData *pgq.Metadata, payload T) ([]uuid.UUID, error) {
 	if err := InitQueue(p.db, queueName); err != nil {
 		return nil, fmt.Errorf("ошибка при инициализации очереди: %w", err)
 	}
@@ -39,6 +39,11 @@ func (p *Publisher[T]) Publish(ctx context.Context, queueName string, payload T)
 
 	metadata := pgq.Metadata{
 		"version": "1.0",
+		"source":  "golang-library",
+	}
+
+	if customMetaData != nil {
+		metadata = *customMetaData
 	}
 
 	msg := &pgq.MessageOutgoing{
